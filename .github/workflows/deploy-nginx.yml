@@ -34,8 +34,12 @@ jobs:
       - name: Verify cluster access
         run: kubectl get nodes
 
+      - name: List Helm chart files
+        run: ls -l /home/master/helm/nginx
+
       - name: Deploy NGINX using Helm
+        working-directory: /home/master/helm/nginx
         run: |
-          helm upgrade --install nginx ./helm/nginx \
+          helm upgrade --install nginx . \
             --namespace default \
             --set image.tag=1.21
