@@ -6,11 +6,11 @@ spring:
     banner-mode: "off"
 
 write:
-  url: ${WRITE_DB_URL:jdbc:postgresql://pooler-write.exam.svc:6432/examdb}
-  user: ${WRITE_DB_USER:examuser}
-  pass: ${WRITE_DB_PASS:exampass}
+  url: jdbc:postgresql://pooler-write.default.svc:6432/examdb
+  user: examuser
+  pass: exampass
 
 read:
-  url: ${READ_DB_URL:jdbc:postgresql://pooler-read.exam.svc:6432/examdb}
-  user: ${READ_DB_USER:examuser_ro}
-  pass: ${READ_DB_PASS:readonly}
+  url: jdbc:postgresql://pooler-read.default.svc:6432/examdb
+  user: examuser_ro
+  pass: readonly
