@@ -1,0 +1,5 @@
+bd/exam/model/StudentResult.class
+bd/exam/ExamApiApplication.class
+bd/exam/config/DatasourceConfig.class
+bd/exam/repo/StudentRepo.class
+bd/exam/web/StudentController.class
