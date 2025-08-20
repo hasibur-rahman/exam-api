@@ -1,0 +1,59 @@
+name: Deploy Backend to Kubernetes
+
+on:
+  workflow_dispatch:   # Allows manual trigger
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-backend:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.15'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.18.3'
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Verify cluster access
+        run: kubectl get nodes
+
+      - name: Create imagePullSecret for Harbor
+        run: |
+          kubectl create secret docker-registry harbor-secret \
+            --namespace default \
+            --docker-server=${{ env.HARBOR_REGISTRY }} \
+            --docker-username=${{ env.HARBOR_USERNAME }} \
+            --docker-password=${{ secrets.HARBOR_PASSWORD }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy backend using Helm
+        working-directory: ./helm/exam-app
+        run: |
+          helm upgrade --install exam-app . \
+            --namespace default \
+            --set image.repository=${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.REPO_NAME }} \
+            --set image.tag=${{ github.sha }} \
+            --set image.pullSecret=harbor-secret
+
+      - name: Test backend with curl
+        run: |
+          # Replace <NODE-IP> and <PORT> with your node IP and NodePort if needed
+          sleep 10  # wait for pods to start
+          kubectl get svc exam-app -o wide
+          # Example: curl http://<NODE-IP>:<PORT>/health
+          echo "Replace with your curl command to test the backend"
