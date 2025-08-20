@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted   # use your runner on k8smaster
     env:
       HARBOR_REGISTRY: ${{ secrets.HARBOR_REGISTRY }}
       HARBOR_PROJECT: build
@@ -65,23 +65,22 @@ jobs:
         run: |
           kubectl create secret docker-registry harbor-secret \
             --namespace default \
-            --docker-server=${{ env.HARBOR_REGISTRY }} \
-            --docker-username=${{ env.HARBOR_USERNAME }} \
-            --docker-password=${{ env.HARBOR_PASSWORD }} \
+            --docker-server=${{ secrets.HARBOR_REGISTRY }} \
+            --docker-username=${{ secrets.HARBOR_USERNAME }} \
+            --docker-password=${{ secrets.HARBOR_PASSWORD }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy backend using Helm
-        working-directory: ./helm/exam-app
+        working-directory: /home/master/helm/exam-app  # absolute path on k8smaster
         run: |
           helm upgrade --install exam-app . \
             --namespace default \
-            --set image.repository=${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.REPO_NAME }} \
+            --set image.repository=${{ env.HARBOR_REGISTRY }}/build/exam-app \
             --set image.tag=${{ github.sha }} \
             --set image.pullSecret=harbor-secret
 
       - name: Test backend with curl
         run: |
-          # wait for pods to start
           sleep 10
           kubectl get svc exam-app -o wide
-          echo "Replace with your curl command to test the backend"
+          # replace with your curl command to test backend
